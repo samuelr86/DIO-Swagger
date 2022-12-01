@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-MyFirstWebApiApplication<my-first-web-api>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "dio.swagger.MyFirstWebApiApplication",
+            "projectName": "my-first-web-api",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

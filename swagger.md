@@ -110,5 +110,45 @@
 		</p>
 
 <h3>Controllers</h3>
+	<h4>Criando nosso primeiro <em>Controller</em></h4>
+	<p>Um controller é um recurso que disponibiliza as funcionalidades de negócio da aplicação através do protocolo HTTP.</p>
+	<p>Vamos criar nosso primeiro controller:
+
+```java
+public class WelcomeController{
+	public String welcome(){
+		return "Welcome to my Spring Boot Web API";
+	}
+}
+```
+
+... e a partir de agora anotaremos o classe com "RestController", e após esse momento seus métodos serão serviços HTTP...
+
+```java
+@RestController
+public class WelcomeController{
+```
+
+... neste caso o método "welcome()" será um recursos HTTP do tipo <em>GET</em>, então anotaremos com um "@GetMapping"...
+
+```java
+@GetMapping
+public String welcome(){
+```
+</p>
+	<h4>RestController</h4>
+	<p>Um RestController em Spring nada mais é do que uma classe contendo anotações específicas para a disponibilização de recursos HTTP baseados em nossos  serviços e regras de negócio.</p>
+	<p>As anotações e configurações mais comuns:
+		<ul>
+		<li>@RestController: Responsável por designar o bean de component que suporta requisições HTTP com base na arquitetura REST.</li>
+		<li>@RequestMapping(prefix): Determina qual a URI comum para todos os recursos disponibilizados pelo Controller.</li>
+		<li>@GetMapping: Determina que o método aceitará requisições do tipo GET.</li>
+		<li>@PostMapping: Determina que o método aceitará requisições do tipo POST.</li>
+		<li>@PutMapping: Determina que o método aceitará requisições do tipo PUT.</li>
+		<li>@DeleteMapping: Determina que o método aceitará requisições do tipo DELETE. Para mostrar a exclusão do elemento precisaremos de um ClienteHTTP, o mais utilizado é o POSTMAN.</li>
+		<li>@RequestBody: Convert um JSON para o tipo do objeto esperado como parâmetro no método.</li>
+		<li>@PathVariable: Consegue determinar que parte da URI será composta por parâmetros recebidos nas requisições.</li>
+	</ul></p>
+
 <h3>Swagger</h3>
 <h3>Exception Handler</h3>	
