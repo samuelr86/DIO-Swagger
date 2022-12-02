@@ -151,4 +151,107 @@ public String welcome(){
 	</ul></p>
 
 <h3>Swagger</h3>
+
+<p>É uma linguagem de descrição de interface para descrever APIs RESTful expressas usando JSON. O Swagger é usado junto com um conjunto de ferramentas de software de código aberto para projetar, construir, documentar e usar serviços da Web RESTful.</p>
+<p>Primeiramente precisamos configurar o Swagger e adicionar as dependências no pom.xml.
+
+```xml
+<!-- SWAGGER DOCUMENTAÇÃO -->
+<dependency>
+	<groupId>io.springfox</groupId>
+	<artifactId>springfox-swagger2</artifactId>
+	<version>2.9.2</version>
+</dependency>
+<dependency>
+	<groupId>io.springfox</groupId>
+	<artifactId>springfox-swagger-ui</artifactId>
+	<version>2.9.2</version>
+</dependency>
+```
+</p>
+<p>Após vamos criar um diretório chamada doc ou config e dentro dessa pasta vamos criar uma classe de configuração do Swagger para o Spring...
+
+```java
+@Configuration
+@EnableSwagger2
+public class SwaggerConfig{
+
+}
+```
+O Swagger tem alguns requisitos que são comuns e outros requisitos que são de escaneamento de onde estarão nossos recursos.</p>
+<p>Primeiro vamos criar um método para retornar os dados de o contato da nossa API...
+
+```java
+private Contact contato(){
+	return new Contact(
+		"Seu nome",
+		"http://www.seusite.com.br",
+		"voce@seusite.com.br");
+}
+```
+... Depois criamos um outro método com as informações da nossa API...
+
+```java
+private ApiInfoBuilder informacoesAPI(){
+    ApiInfoBuilder apiInfoBuilder = new ApiInfoBuilder();
+
+    apiInfoBuilder.title("Title - Rest API");
+    apiInfoBuilder.description("API exemplo de uso de SpringBoot REST API");
+    apiInfoBuilder.version("1.0");
+    apiInfoBuilder.termsOfServiceUrl("Termo de uso: Open Source");
+    apiInfoBuilder.license("Licença - Sua Empresa");
+    apiInfoBuilder.licenseUrl("http://www.seusite.com.br");
+    apiInfoBuilder.contact(this.contato());
+
+    return apiInfoBuilder;
+}
+```
+... como se trata de uma aplicação Springboot, vamos criar um Docket(documento) em forma de @Bean...
+
+```java
+@Bean
+public Docket detalheAPI(){
+    Docket docket = new Docket(DocumentationType.SWAGGER_2);
+
+    docket.select()
+        .apis(RequestHandlerSelectors.basePackage("pacote.comseus.controllers"))
+        .paths(PathSelectors.any())
+        .build()
+        .apiInfo(this.informacoesAPI().build())
+        .consumes(new HashSet<String>(Arrays.asList("application/json")))
+        .produces(new HashSet<String>(Arrays.asList("application/json")));
+
+    return docket;
+}
+```
+</p>
+<p>Após entrar em "localhost:8080/swagger-ui.html" e teremos acesso a toda documentação criada pelo swagger com as classes, as rotas e o métodos utilizados...
+<table>
+					<tr>
+						<td><b>usuario-controller</td>
+						<td><b>User Controller</td>	
+					</tr>
+					<tr>
+						<td>GET</td>
+						<td>/users</td>		
+						<td>getUser</td>				
+					</tr>
+					<tr>
+						<td>POST</td>
+						<td>/users</td>		
+						<td>postUser</td>				
+					</tr>
+					<tr>
+						<td>DELETE</td>
+						<td>/users/{id}</td>		
+						<td>deleteUser</td>				
+					</tr>
+					<tr>
+						<td>GET</td>
+						<td>/users/{username}</td>		
+						<td>getOne</td>				
+					</tr>
+				</table>
+</p>
+
 <h3>Exception Handler</h3>	
