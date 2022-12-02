@@ -12,14 +12,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import dio.swagger.model.User;
-import dio.swagger.repository.UserRepository;
+import dio.swagger.repository.UsuarioRepository;
 
 @RestController
 @RequestMapping("/users")
-public class UserController {
+public class UsuarioController {
     
     @Autowired
-    private UserRepository usuarioRepositorio;
+    private UsuarioRepository usuarioRepositorio;
 
     @GetMapping()
     public List<User> getUsers(){
