@@ -255,3 +255,146 @@ public Docket detalheAPI(){
 </p>
 
 <h3>Exception Handler</h3>	
+
+<p>O tratamento de exceções, na ciência da computação, é o mecanismo responsável pelo tratamento da ocorrência de condições que alteram o fluxo normal da execução de programas de computadores. Nossa aplicações precisam ser resilientes a possíveis comportamentos inesperados baseados na proposta de negócio e falando de recursos HTTP, realizando implementações que centralizam e gerenciam este tipo de tratamento de exceção.</p>
+
+<h4>Exception Handler</h4>
+<p>Um manipulador de exceção é o código que estipula o que um programa fará quando um evento anômalo interromper o fluxo normal das instruções desse programa. Existem alguns tipos de tratamento de exceções em uma aplicação Spring Web, iremos ilustrar duas delas e focar na <em>ControllerAdvice</em> mais utilizada em nossos projetos.</p>
+<ul>
+	<li><b>Solução 1</b>: Nível do Controller - @ExceptionHandler
+		<p>A primeira solução funciona no nível do @Controller, onde cada método trata um aexceção de forma declarativa com @ExceptionHandler:
+
+```java
+public class MeuController{
+	//...
+	@ExceptionHandler({MinhaException1.class})
+	public void meuMetodo(){
+		//
+	}
+}
+```	
+</p>
+</li>
+	<li><b>Solução 2</b>: o <em>ResponseStatusExceptionResolver</em>
+		<p>Sua principal responsabilidade é usar a anotação @ResponseStatus disponível em exceções personalizadas e mapear essas exceções para códigos de  status HTTP.
+
+```java
+@ResponseStatus(value = HttpStatus.NOT_FOUND)
+public class RecursoNotFoundException extends RuntimeException {
+	public RecursoNotFoundException(){
+		super();
+	}
+	public RecursoNotFoundException(String msg){
+		super(msg);
+	}
+}
+```
+</p>
+	</li>
+</ul>
+<h4>RestControllerAdvice</h4>
+<p>A anotação @ControllerAdvice nos permite consolidar nossos múltiplos @ExceptionHandlers espalhados de antes em um único componente global de tratamento de erros.
+<ul>
+	<li>Isso nos dá controle total sobre o corpo da resposta, bemcomo o código de status.</li>
+	<li>Ele fornece o mapeamento de várias exceções ao mesmo método, para serem tratadas em conjunto.</li>
+	<li>Ele faz bom uso da resposta RESTful ResponseEntity masi recente.</li>
+</ul></p>
+<h4>GlobalExceptionHandler</h4>
+<p>Vamos configurar um tratamento de exceções global para interceptar todas as exceções que ocorrem em nossa aplicação, sem precisar tornar declarativo em todos os recursos.</p>
+<h5>Customizando nossas mensagens</h5>
+<p>Primeiro de tudo uma resposta HTTP mesmo sendo um Erro pode ser considerada um Objeto que será convertido em JSON exponde informãções relacionadas a exceção disparada.
+
+```java
+import java.util.Date 
+public class ResponseError{
+	private Date timstamp = new Date();
+	private String status = "error";
+	private int statusCode = 400;
+	private String error;
+
+	// getters e setters 
+}
+```
+</p>
+<ul>
+	<li>O campo <b>timestamp</b> é o momento exato da geração da exceção</li>
+	<li>O campo <b>status</b> é um campo customizado de acordo com seu domínio de negócio</li>
+	<li>O campo <b>statusCode</b> pode ser um dicionário de erro da sua aplicação</li>
+	<li>O campo <b>error</b> é a mensagem apresentada ao usuário da aplicação</li>
+</ul>
+
+<h5>Definindo uma exceção de negócio</h5>
+<p>Algumas de nossas exceções estão relacionadas ao domínio ou negócio da nossa aplicação, sendo assim vamos criar uma classe de exceção que estende RuntimeException que servirá como base para todas as outras exceções do negócio.</p>
+
+```java
+public class BusinessException extends RuntimeException {
+	
+	public BusinessException(String msg){
+		super(msg);
+	}
+
+	public BusinessException(String msg, Object ... params){
+		super(String.format(msg, params));
+	}
+}
+```
+<p>A classe BusinessException possui dois construtores, uma para definição de uma mensagem simples e o outro para uma mensagem mais customizada utilizadno o recurso de <b>varargs</b>.</p>
+
+<h5>Configurando o ExceptionHandler</h5>
+<p>Vamos criar uma classe que captará todas as exceções do negócio BusinessException para tratar e converter e retornar mensagens mais declarativas ao usuário da aplicação.</p>
+
+```java
+import jakarta.annotation.Resource;
+
+import org.springframework.cglib.proxy.UndeclaredThrowableException;
+import org.springframework.context.MessageSource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
+
+
+@RestControllerAdvice
+public class GlobalExcpetionHandler {
+    @Resource
+    private MessageSource messageSource; // capaz de pegar as msg de exceções
+
+    private HttpHeaders headers(){ 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
+    }
+
+    private ResponseError responseError(String msg, HttpStatus statusCode){ 
+        ResponseError responseError = new ResponseError();
+        responseError.setStatus("error");
+        responseError.setError(msg);
+        responseError.setStatusCode(statusCode.value());
+        return responseError;
+    }
+
+    @ExceptionHandler(Exception.class)
+    private ResponseEntity<Object> handleGeneral(Exception e, WebRequest request){
+        if(e.getClass().isAssignableFrom(UndeclaredThrowableException.class)){
+            UndeclaredThrowableException exception = (UndeclaredThrowableException) e;
+            return handleBusinessException((BusinessException) exception.getUndeclaredThrowable(), request);
+        }else{
+            String message = messageSource.getMessage("error.server", new Object[]{e.getMessage()}, null);
+            ResponseError error = responseError(message, HttpStatus.INTERNAL_SERVER_ERROR);
+            return handleExceptionInternal(e, error, headers(), HttpStatus.INTERNAL_SERVER_ERROR, request);
+        }
+    }
+
+    @ExceptionHandler({BusinessException.class})
+    private ResponseEntity<Object> handleBusinessException(BusinessException e, WebRequest request){
+        ResponseError error = responseError(e.getMessage(), HttpStatus.CONFLICT);
+        return handleExceptionInternal(e, error, headers(), HttpStatus.CONFLICT, request);
+    }
+
+  
+}
+
+```

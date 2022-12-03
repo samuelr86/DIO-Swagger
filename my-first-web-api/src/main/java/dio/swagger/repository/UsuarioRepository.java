@@ -5,12 +5,20 @@ import java.util.List;
 
 import org.springframework.stereotype.Repository;
 
+
+import dio.swagger.handler.CampoObrigatorioException;
 import dio.swagger.model.User;
 
 @Repository
 public class UsuarioRepository {
 
     public void save(User user) {
+        if(user.getLogin()==null){
+            throw new CampoObrigatorioException("login");
+        }
+        if(user.getPassword()==null){
+            throw new CampoObrigatorioException("password");
+        }
         if (user.getId() == null) {
             System.out.println("SAVE - Recebendo o usuário na camada de repositório.");
         } else {
