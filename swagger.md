@@ -398,3 +398,60 @@ public class GlobalExcpetionHandler {
 }
 
 ```
+<p>Após isso vamos aplicar o tratamento de exceções no UsuarioRepository para validação do login...
+
+```java
+@Repository
+public class UsuarioRepository {
+
+    public void save(User user) {
+        if(user.getLogin()==null){
+            throw new BusinessException("O campo login é obrigatório");
+        }
+        if(user.getPassword()==null){
+            throw new BusinessException("O campo password é obrigatório");
+        }
+        if (user.getId() == null) {
+            System.out.println("SAVE - Recebendo o usuário na camada de repositório.");
+        } else {
+            System.out.println("UPDATE - Recebendo o usuário na camada de repositório.");
+        }
+        System.out.println(user);
+    }
+
+```
+... porém podem ocorrer redundâncias de implementação então podemos criar uma outra classe exclusiva para campos obrigatórios que extende de BusinessException...
+
+```java
+package dio.handler
+
+public class CampoObrigatorioException extends BusinessException{
+	public CampoObrigatorioException(String campo){
+		super("O campo %s é obrigatório", campo);
+	}
+}
+```
+... e substitui o BusinessException em UserRepository...
+
+```java
+@Repository
+public class UsuarioRepository {
+
+    public void save(User user) {
+        if(user.getLogin()==null){
+            throw new CampoObrigatorioException("login");
+        }
+        if(user.getPassword()==null){
+            throw new CampoObrigatorioException("password");
+        }
+        if (user.getId() == null) {
+            System.out.println("SAVE - Recebendo o usuário na camada de repositório.");
+        } else {
+            System.out.println("UPDATE - Recebendo o usuário na camada de repositório.");
+        }
+        System.out.println(user);
+    }
+
+```
+
+</p>
